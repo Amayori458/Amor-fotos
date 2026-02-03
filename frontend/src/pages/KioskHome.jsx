@@ -24,14 +24,14 @@ export default function KioskHome() {
   };
 
   return (
-    <div className="kiosk-container bg-background" data-testid="kiosk-home-page">
-      <div className="mx-auto flex min-h-screen max-w-[1080px] flex-col px-10 py-10">
+    <div className="min-h-screen w-full bg-background" data-testid="kiosk-home-page">
+      <div className="flex min-h-screen w-full flex-col px-14 py-12 2xl:px-20" data-testid="kiosk-home-shell">
         <header className="flex items-center justify-between" data-testid="kiosk-home-header">
-          <div className="flex items-center gap-4" data-testid="kiosk-home-brand">
+          <div className="flex items-center gap-5" data-testid="kiosk-home-brand">
             <img
               src={LOGO_URL}
               alt="Amor por Fotos"
-              className="h-12 w-auto"
+              className="h-14 w-auto"
               data-testid="kiosk-home-logo"
             />
             <div className="leading-tight">
@@ -49,7 +49,7 @@ export default function KioskHome() {
 
           <Button
             variant="ghost"
-            className="no-print rounded-xl px-4 py-3 text-base"
+            className="no-print rounded-xl px-5 py-4 text-base"
             onClick={() => navigate("/admin")}
             data-testid="open-admin-button"
           >
@@ -58,21 +58,24 @@ export default function KioskHome() {
           </Button>
         </header>
 
-        <main className="mt-14" data-testid="kiosk-home-main">
+        <main
+          className="flex flex-1 flex-col justify-center gap-10"
+          data-testid="kiosk-home-main"
+        >
           <motion.div
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.35 }}
           >
             <h1
-              className="text-5xl font-extrabold tracking-tight"
+              className="text-6xl font-extrabold tracking-tight"
               data-testid="kiosk-home-headline"
             >
               Suas fotos,
               <span className="text-primary"> impressas agora</span>.
             </h1>
             <p
-              className="mt-4 max-w-[56ch] text-lg text-foreground/70"
+              className="mt-5 max-w-[64ch] text-xl text-foreground/70"
               data-testid="kiosk-home-subtitle"
             >
               Toque para gerar um QR Code, envie do celular e retire as fotos junto
@@ -81,32 +84,32 @@ export default function KioskHome() {
           </motion.div>
 
           <Card
-            className="mt-10 rounded-2xl border border-black/5 bg-white shadow-sm"
+            className="w-full rounded-2xl border border-black/5 bg-white shadow-sm"
             data-testid="kiosk-home-start-card"
           >
-            <CardContent className="p-8">
-              <div className="grid gap-6">
-                <div className="grid gap-2" data-testid="kiosk-home-instructions">
-                  <div className="text-sm font-semibold text-foreground/80">
+            <CardContent className="p-10">
+              <div className="grid gap-8" data-testid="kiosk-home-card-content">
+                <div className="grid gap-3" data-testid="kiosk-home-instructions">
+                  <div className="text-base font-semibold text-foreground/80">
                     1) Escaneie o QR Code
                   </div>
-                  <div className="text-sm text-foreground/60">
+                  <div className="text-base text-foreground/60">
                     2) Selecione e envie suas fotos (quantas quiser)
                   </div>
-                  <div className="text-sm text-foreground/60">
+                  <div className="text-base text-foreground/60">
                     3) Volte ao totem e imprima
                   </div>
                 </div>
 
                 <Button
                   onClick={onStart}
-                  className="h-auto w-full rounded-xl bg-primary px-10 py-7 text-xl font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                  className="h-auto w-full rounded-xl bg-primary px-10 py-8 text-2xl font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
                   data-testid="kiosk-home-start-button"
                 >
                   Toque para começar
                 </Button>
 
-                <div className="text-xs text-foreground/50" data-testid="kiosk-home-note">
+                <div className="text-sm text-foreground/50" data-testid="kiosk-home-note">
                   Fotos HEIC/HEIF serão convertidas automaticamente no celular.
                 </div>
               </div>
@@ -114,7 +117,7 @@ export default function KioskHome() {
           </Card>
         </main>
 
-        <footer className="mt-auto pt-10 text-xs text-foreground/40" data-testid="kiosk-home-footer">
+        <footer className="pt-10 text-sm text-foreground/40" data-testid="kiosk-home-footer">
           Caso apareça o diálogo de impressão, confirme para iniciar a revelação.
         </footer>
       </div>
