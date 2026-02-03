@@ -333,6 +333,57 @@ class PhotoKioskAPITester:
                 
         return success
 
+    def test_admin_pin_verification(self):
+        """Test admin PIN verification endpoint"""
+        # Test correct PIN (default 1234)
+        success, response = self.run_test(
+            "Admin PIN Verification (Correct)",
+            "POST",
+            "admin/verify-pin",
+            200,
+            data={"pin": "1234"}
+        )
+        
+        if success and response:
+            if response.get('ok') is True:
+                print(f"   Correct PIN accepted ✅")
+            else:
+                return self.log_test("PIN Verification Check", False, "Correct PIN was rejected")
+        
+        # Test incorrect PIN
+        success2, response2 = self.run_test(
+            "Admin PIN Verification (Incorrect)",
+            "POST", 
+            "admin/verify-pin",
+            200,
+            data={"pin": "wrong"}
+        )
+        
+        if success2 and response2:
+            if response2.get('ok') is False:
+                print(f"   Incorrect PIN rejected ✅")
+            else:
+                return self.log_test("PIN Verification Check", False, "Incorrect PIN was accepted")
+                
+        return success and success2
+
+    def test_settings_security(self):
+        """Test that settings endpoint doesn't expose admin_pin"""
+        success, response = self.run_test(
+            "Settings Security Check",
+            "GET",
+            "settings",
+            200
+        )
+        
+        if success and response:
+            if 'admin_pin' in response:
+                return self.log_test("Settings Security", False, "admin_pin exposed in settings response")
+            else:
+                print(f"   admin_pin properly hidden from settings ✅")
+                
+        return success
+
     def run_all_tests(self):
         """Run all API tests in sequence"""
         print("🚀 Starting Photo Kiosk API Tests")
