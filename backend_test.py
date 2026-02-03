@@ -394,6 +394,8 @@ class PhotoKioskAPITester:
         tests = [
             self.test_root_endpoint,
             self.test_settings_get,
+            self.test_settings_security,
+            self.test_admin_pin_verification,
             self.test_settings_update,
             self.test_create_session,
             self.test_get_session,
