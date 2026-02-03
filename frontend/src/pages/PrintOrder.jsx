@@ -36,6 +36,7 @@ export default function PrintOrder() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderNumber]);
 
   const totalText = useMemo(() => {

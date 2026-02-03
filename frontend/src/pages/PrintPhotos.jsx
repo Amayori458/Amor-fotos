@@ -33,6 +33,7 @@ export default function PrintPhotos() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderNumber]);
 
   const photos = useMemo(() => {
