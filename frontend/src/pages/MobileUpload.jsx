@@ -194,7 +194,7 @@ export default function MobileUpload() {
       </div>
 
       <div
-        className="fixed inset-x-0 bottom-0 border-t border-black/5 bg-white/95 px-5 py-4"
+        className="fixed inset-x-0 bottom-0 border-t border-black/5 bg-white/95 px-5 py-3"
         style={{ backdropFilter: "blur(10px)" }}
         data-testid="mobile-upload-bottom-bar"
       >
