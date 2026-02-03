@@ -45,7 +45,6 @@ export default function Admin() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSave = async () => {
