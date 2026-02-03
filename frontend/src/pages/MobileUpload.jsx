@@ -180,15 +180,20 @@ export default function MobileUpload() {
               Prévia ({previews.length})
             </div>
             <div className="grid grid-cols-3 gap-3" data-testid="mobile-upload-previews-grid">
-              {previews.slice(0, 24).map((p) => (
-                <div
-                  key={p.key}
-                  className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
-                  data-testid={`mobile-upload-preview-${p.key}`}
-                >
-                  <img src={p.url} alt={p.name} className="h-24 w-full object-cover" />
-                </div>
-              ))}
+              {previews.slice(0, 24).map((p) => {
+                const key = p.key;
+                const url = p.url;
+                const name = p.name;
+                return (
+                  <div
+                    key={key}
+                    className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
+                    data-testid={"mobile-upload-preview-" + key}
+                  >
+                    <img src={url} alt={name} className="h-24 w-full object-cover" />
+                  </div>
+                );
+              })}
             </div>
             {previews.length > 24 ? (
               <div className="mt-3 text-sm text-foreground/60" data-testid="mobile-upload-previews-more">

@@ -34,7 +34,6 @@ export default function PrintOrder() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderNumber]);
 
   const totalText = useMemo(() => {
@@ -204,23 +203,31 @@ export default function PrintOrder() {
             Fotos para impressão
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4" data-testid="print-photos-grid">
-            {order.photos.map((p) => (
-              <div
-                key={p.photo_id}
-                className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
-                style={{ breakInside: "avoid" }}
-                data-testid={`print-photo-${p.photo_id}`}
-              >
-                <img
-                  src={absoluteFromPath(p.url_path)}
-                  alt={p.file_name}
-                  className="h-72 w-full object-cover"
-                />
-                <div className="no-print px-4 py-3 text-xs text-foreground/60" data-testid={`print-photo-name-${p.photo_id}`}>
-                  {p.file_name}
+            {order.photos.map((p) => {
+              const photoId = p.photo_id;
+              const urlPath = p.url_path;
+              const fileName = p.file_name;
+              return (
+                <div
+                  key={photoId}
+                  className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
+                  style={{ breakInside: "avoid" }}
+                  data-testid={"print-photo-" + photoId}
+                >
+                  <img
+                    src={absoluteFromPath(urlPath)}
+                    alt={fileName}
+                    className="h-72 w-full object-cover"
+                  />
+                  <div
+                    className="no-print px-4 py-3 text-xs text-foreground/60"
+                    data-testid={"print-photo-name-" + photoId}
+                  >
+                    {fileName}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="no-print mt-6 text-xs text-foreground/50" data-testid="print-hint">

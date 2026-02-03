@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import QRCode from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import { Camera, CheckCircle2, Clock3, Images, Printer, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -177,7 +177,7 @@ export default function KioskSession() {
 
                   <div className="flex items-center justify-center">
                     <div className="rounded-3xl border-2 border-primary/30 bg-white p-6 shadow-sm">
-                      <QRCode value={uploadUrl} size={300} level="H" includeMargin />
+                      <QRCodeSVG value={uploadUrl} size={300} level="H" includeMargin />
                       <div className="mt-4 text-center text-sm font-semibold text-foreground/70" data-testid="kiosk-qr-label">
                         Escaneie para começar
                       </div>
@@ -261,19 +261,24 @@ export default function KioskSession() {
                       className="grid grid-cols-3 gap-3 md:grid-cols-4"
                       data-testid="kiosk-photos-grid"
                     >
-                      {photos.slice(-12).map((p) => (
-                        <div
-                          key={p.photo_id}
-                          className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
-                          data-testid={`kiosk-photo-thumb-${p.photo_id}`}
-                        >
-                          <img
-                            src={absoluteFromPath(p.url_path)}
-                            alt={p.file_name}
-                            className="h-36 w-full object-cover"
-                          />
-                        </div>
-                      ))}
+                      {photos.slice(-12).map((p) => {
+                        const photoId = p.photo_id;
+                        const urlPath = p.url_path;
+                        const fileName = p.file_name;
+                        return (
+                          <div
+                            key={photoId}
+                            className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
+                            data-testid={"kiosk-photo-thumb-" + photoId}
+                          >
+                            <img
+                              src={absoluteFromPath(urlPath)}
+                              alt={fileName}
+                              className="h-36 w-full object-cover"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
