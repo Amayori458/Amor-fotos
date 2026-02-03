@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/sonner";
-import { api } from "@/lib/api";
+import { absoluteFromPath, api } from "@/lib/api";
 
 const LOGO_URL =
   "https://customer-assets.emergentagent.com/job_photo-kiosk-5/artifacts/em2ts921_1753098819.amorporfotos.com.br-removebg-preview.png";
@@ -21,6 +21,7 @@ export default function PrintOrder() {
   const [loading, setLoading] = useState(true);
 
   const autoPrint = searchParams.get("autoprint") === "1";
+  const combined = searchParams.get("combined") === "1";
 
   const load = async () => {
     setLoading(true);
@@ -45,33 +46,22 @@ export default function PrintOrder() {
     return symbol + " " + Number(order.total_amount).toFixed(2);
   }, [order]);
 
-  const openPhotosPrint = () => {
-    const url = "/print/" + orderNumber + "/photos?autoprint=1";
-    const win = window.open(url, "_blank", "noopener,noreferrer");
-    if (!win) toast.message("Permita pop-ups para imprimir as fotos.");
-  };
+  const photos = useMemo(() => {
+    if (!order || !Array.isArray(order.photos)) return [];
+    return order.photos;
+  }, [order]);
 
   useEffect(() => {
     if (!order || !autoPrint) return;
-
-    // Pre-open photos window (helps against popup blockers)
-    const photosWindow = window.open(
-      "/print/" + orderNumber + "/photos?autoprint=1",
-      "_blank",
-      "noopener,noreferrer",
-    );
-
     const t = setTimeout(() => {
       try {
         window.print();
       } catch (e) {
         // ignore
       }
-    }, 450);
+    }, 600);
 
     const after = async () => {
-      // if popup was blocked above, try again
-      if (!photosWindow) openPhotosPrint();
       try {
         await api.post("/orders/" + orderNumber + "/mark-printed");
       } catch (e) {
@@ -91,7 +81,7 @@ export default function PrintOrder() {
     return (
       <div className="min-h-screen bg-background p-10" data-testid="receipt-loading-page">
         <div className="text-sm text-foreground/60" data-testid="receipt-loading-text">
-          Carregando comprovante...
+          Carregando...
         </div>
       </div>
     );
@@ -120,38 +110,27 @@ export default function PrintOrder() {
         <div className="no-print flex items-center justify-between" data-testid="receipt-topbar">
           <Button
             variant="ghost"
-            className="rounded-xl px-4 py-3"
+            className="rounded-xl px-3 py-3"
             onClick={() => navigate("/")}
             data-testid="receipt-back-home-button"
           >
             <RotateCcw className="h-5 w-5" />
-            Início
           </Button>
 
-          <div className="flex gap-3">
-            <Button
-              onClick={() => window.print()}
-              className="rounded-xl bg-secondary px-5 py-3 text-sm font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90"
-              data-testid="receipt-print-now-button"
-            >
-              <Printer className="h-5 w-5" />
-              Imprimir comprovante
-            </Button>
-            <Button
-              onClick={openPhotosPrint}
-              className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-              data-testid="receipt-print-photos-button"
-            >
-              <Printer className="h-5 w-5" />
-              Imprimir fotos
-            </Button>
-          </div>
+          <Button
+            onClick={() => window.print()}
+            className="rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90"
+            data-testid="receipt-print-now-button"
+          >
+            <Printer className="h-5 w-5" />
+            Imprimir
+          </Button>
         </div>
 
         <motion.div
           initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.35 }}
+          transition={{ duration: 0.25 }}
           className="mt-8"
           data-testid="receipt-header"
         >
@@ -161,7 +140,9 @@ export default function PrintOrder() {
               <div className="text-xs font-medium uppercase tracking-wide text-foreground/60" data-testid="receipt-kicker">
                 Comprovante
               </div>
-              <div className="text-2xl font-bold" data-testid="receipt-store-name">{order.store_name}</div>
+              <div className="text-2xl font-bold" data-testid="receipt-store-name">
+                {order.store_name}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -209,6 +190,37 @@ export default function PrintOrder() {
             </div>
           </CardContent>
         </Card>
+
+        {combined ? (
+          <div className="mt-14" data-testid="combined-photos-section">
+            <div className="no-print text-xs font-medium uppercase tracking-wide text-foreground/60" data-testid="combined-photos-kicker">
+              Fotos (1 por página)
+            </div>
+
+            <div className="mt-4" data-testid="combined-photos-stack">
+              {photos.map((p, idx) => {
+                const photoId = p.photo_id;
+                const urlPath = p.url_path;
+                const fileName = p.file_name;
+                return (
+                  <div
+                    key={photoId}
+                    className="bg-white"
+                    style={{ pageBreakBefore: idx === 0 ? "always" : "always" }}
+                    data-testid={"combined-photo-page-" + photoId}
+                  >
+                    <img
+                      src={absoluteFromPath(urlPath)}
+                      alt={fileName}
+                      className="h-[92vh] w-full object-contain"
+                      data-testid={"combined-photo-image-" + photoId}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -67,40 +67,25 @@ export default function KioskSession() {
     resetIdle();
     setCreatingOrder(true);
 
-    // Pre-open windows to avoid popup blockers (1-toque só)
-    const receiptWin = window.open(
-      "about:blank",
-      "receipt",
-      "noopener,noreferrer",
-    );
-    const photosWin = window.open(
-      "about:blank",
-      "photos",
-      "noopener,noreferrer",
-    );
+    // Pre-open a single window in the same gesture (most reliable on the web)
+    const win = window.open("about:blank", "_blank");
 
     try {
       const { data } = await api.post("/sessions/" + sessionId + "/orders", {
         selected_photo_ids: null,
       });
 
-      const receiptUrl =
-        "/print/" + data.order_number + "?autoprint=1&from=kiosk";
-      const photosUrl =
-        "/print/" + data.order_number + "/photos?autoprint=1&from=kiosk";
+      const combinedUrl =
+        "/print/" + data.order_number + "?autoprint=1&combined=1&from=kiosk";
 
-      if (receiptWin) receiptWin.location.href = receiptUrl;
-      if (photosWin) photosWin.location.href = photosUrl;
-
-      if (!receiptWin || !photosWin) {
-        toast.message(
-          "Permita pop-ups para imprimir comprovante e fotos automaticamente.",
-        );
+      if (win) {
+        win.location.href = combinedUrl;
+      } else {
+        toast.message("Permita pop-ups para imprimir.");
       }
     } catch (e) {
       try {
-        if (receiptWin) receiptWin.close();
-        if (photosWin) photosWin.close();
+        if (win) win.close();
       } catch (err) {
         // ignore
       }
