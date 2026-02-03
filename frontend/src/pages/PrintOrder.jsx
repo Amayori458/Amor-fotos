@@ -23,7 +23,7 @@ export default function PrintOrder() {
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/orders/${orderNumber}`);
+      const { data } = await api.get("/orders/" + orderNumber);
       setOrder(data);
     } catch (e) {
       toast.error("Pedido não encontrado.");
@@ -39,13 +39,13 @@ export default function PrintOrder() {
   const totalText = useMemo(() => {
     if (!order) return "";
     const symbol = order.currency === "BRL" ? "R$" : order.currency;
-    return `${symbol} ${Number(order.total_amount).toFixed(2)}`;
+    return symbol + " " + Number(order.total_amount).toFixed(2);
   }, [order]);
 
   const onMarkPrinted = async () => {
     setMarking(true);
     try {
-      await api.post(`/orders/${orderNumber}/mark-printed`);
+      await api.post("/orders/" + orderNumber + "/mark-printed");
       toast.success("Marcado como impresso.");
     } catch (e) {
       toast.error("Falha ao marcar como impresso.");
@@ -205,7 +205,7 @@ export default function PrintOrder() {
             Fotos para impressão
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4" data-testid="print-photos-grid">
-            {order.photos.map((p) => {
+            {photos.map((p) => {
               const photoId = p.photo_id;
               const urlPath = p.url_path;
               const fileName = p.file_name;
