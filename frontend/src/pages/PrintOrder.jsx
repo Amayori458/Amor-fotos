@@ -112,8 +112,8 @@ export default function PrintOrder() {
   const photos = Array.isArray(order.photos) ? order.photos : [];
 
   return (
-    <div className="min-h-screen bg-background px-6 py-8" data-testid="print-page">
-      <div className="mx-auto max-w-3xl">
+    <div className="min-h-screen w-full bg-background" data-testid="print-page">
+      <div className="flex min-h-screen w-full flex-col px-14 py-12 2xl:px-20" data-testid="print-shell">
         <div className="no-print flex items-center justify-between" data-testid="print-topbar">
           <Button
             variant="ghost"

@@ -76,8 +76,8 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-background px-6 py-10" data-testid="admin-page">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen w-full bg-background" data-testid="admin-page">
+      <div className="flex min-h-screen w-full flex-col px-14 py-12 2xl:px-20" data-testid="admin-shell">
         <header className="flex items-center justify-between" data-testid="admin-header">
           <div className="flex items-center gap-3" data-testid="admin-brand">
             <img src={LOGO_URL} alt="Amor por Fotos" className="h-10 w-auto" data-testid="admin-logo" />
