@@ -59,20 +59,51 @@ export default function KioskSession() {
 
   const resetIdle = () => setIdleCountdown(kioskAutoReturnSec);
 
-  const photosCount = session?.photos_count ?? (Array.isArray(session?.photos) ? session.photos.length : 0);
+  const photosCount =
+    session?.photos_count ??
+    (Array.isArray(session?.photos) ? session.photos.length : 0);
 
   const onPrint = async () => {
     resetIdle();
     setCreatingOrder(true);
+
+    // Pre-open windows to avoid popup blockers (1-toque só)
+    const receiptWin = window.open(
+      "about:blank",
+      "receipt",
+      "noopener,noreferrer",
+    );
+    const photosWin = window.open(
+      "about:blank",
+      "photos",
+      "noopener,noreferrer",
+    );
+
     try {
       const { data } = await api.post("/sessions/" + sessionId + "/orders", {
         selected_photo_ids: null,
       });
 
-      const url = "/print/" + data.order_number + "?autoprint=1&from=kiosk";
-      const win = window.open(url, "_blank", "noopener,noreferrer");
-      if (!win) toast.message("Permita pop-ups para imprimir.");
+      const receiptUrl =
+        "/print/" + data.order_number + "?autoprint=1&from=kiosk";
+      const photosUrl =
+        "/print/" + data.order_number + "/photos?autoprint=1&from=kiosk";
+
+      if (receiptWin) receiptWin.location.href = receiptUrl;
+      if (photosWin) photosWin.location.href = photosUrl;
+
+      if (!receiptWin || !photosWin) {
+        toast.message(
+          "Permita pop-ups para imprimir comprovante e fotos automaticamente.",
+        );
+      }
     } catch (e) {
+      try {
+        if (receiptWin) receiptWin.close();
+        if (photosWin) photosWin.close();
+      } catch (err) {
+        // ignore
+      }
       toast.error("Falha ao gerar impressão.");
     } finally {
       setCreatingOrder(false);
@@ -87,13 +118,24 @@ export default function KioskSession() {
       tabIndex={-1}
       data-testid="kiosk-session-page"
     >
-      <div className="flex min-h-screen w-full flex-col px-14 py-12 2xl:px-20" data-testid="kiosk-session-shell">
-        <header className="flex items-center justify-between" data-testid="kiosk-session-header">
-          <img src={LOGO_URL} alt="Amor por Fotos" className="h-12 w-auto" data-testid="kiosk-session-logo" />
+      <div
+        className="flex min-h-screen w-full flex-col px-14 py-12 2xl:px-20"
+        data-testid="kiosk-session-shell"
+      >
+        <header
+          className="flex items-center justify-between"
+          data-testid="kiosk-session-header"
+        >
+          <img
+            src={LOGO_URL}
+            alt="Amor por Fotos"
+            className="h-12 w-auto"
+            data-testid="kiosk-session-logo"
+          />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div
-              className="flex items-center gap-2 rounded-full bg-muted px-5 py-3 text-sm font-semibold text-foreground/70"
+              className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground/70"
               data-testid="kiosk-idle-timer"
             >
               <Clock3 className="h-4 w-4" />
@@ -101,7 +143,7 @@ export default function KioskSession() {
             </div>
             <Button
               variant="ghost"
-              className="rounded-xl px-4 py-3"
+              className="rounded-xl px-3 py-3"
               onClick={() => navigate("/")}
               data-testid="kiosk-back-home-button"
             >
@@ -110,33 +152,54 @@ export default function KioskSession() {
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col justify-center gap-10" data-testid="kiosk-session-main">
+        <main
+          className="flex flex-1 flex-col justify-center gap-10"
+          data-testid="kiosk-session-main"
+        >
           <motion.div
             initial={{ y: 8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25 }}
           >
-            <div className="text-xs font-medium uppercase tracking-wide text-foreground/60" data-testid="kiosk-session-kicker">
+            <div
+              className="text-xs font-medium uppercase tracking-wide text-foreground/60"
+              data-testid="kiosk-session-kicker"
+            >
               Etapa 1 · QR
             </div>
-            <div className="mt-3 text-4xl font-extrabold tracking-tight" data-testid="kiosk-session-headline">
+            <div
+              className="mt-3 text-4xl font-extrabold tracking-tight"
+              data-testid="kiosk-session-headline"
+            >
               Escaneie
             </div>
           </motion.div>
 
-          <Card className="rounded-2xl border border-black/5 bg-white shadow-sm" data-testid="kiosk-session-card">
+          <Card
+            className="rounded-2xl border border-black/5 bg-white shadow-sm"
+            data-testid="kiosk-session-card"
+          >
             <CardContent className="p-10">
-              <div className="grid grid-cols-1 gap-10 md:grid-cols-2" data-testid="kiosk-session-grid">
-                <div className="flex items-center justify-center" data-testid="kiosk-qr-wrapper">
-                  <div className="rounded-2xl border border-black/10 bg-white p-7">
-                    <QRCodeSVG value={uploadUrl} size={340} level="H" includeMargin />
+              <div
+                className="grid grid-cols-1 gap-10 md:grid-cols-2"
+                data-testid="kiosk-session-grid"
+              >
+                <div
+                  className="flex items-center justify-center"
+                  data-testid="kiosk-qr-wrapper"
+                >
+                  <div className="rounded-2xl border border-black/10 bg-white p-6">
+                    <QRCodeSVG value={uploadUrl} size={320} level="H" includeMargin />
                     <div className="sr-only" data-testid="kiosk-qr-code" />
                   </div>
                 </div>
 
-                <div className="flex flex-col justify-center gap-6" data-testid="kiosk-session-right">
+                <div
+                  className="flex flex-col justify-center gap-6"
+                  data-testid="kiosk-session-right"
+                >
                   <div
-                    className="inline-flex items-center gap-2 rounded-full bg-muted px-5 py-3 text-sm font-semibold"
+                    className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold"
                     data-testid="kiosk-uploaded-count-badge"
                   >
                     <CheckCircle2 className="h-4 w-4 text-accent" />
@@ -146,14 +209,17 @@ export default function KioskSession() {
                   <Button
                     onClick={onPrint}
                     disabled={creatingOrder || photosCount === 0}
-                    className="h-auto w-full rounded-xl bg-secondary px-8 py-8 text-2xl font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
+                    className="h-auto w-full rounded-xl bg-secondary px-6 py-6 text-xl font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
                     data-testid="kiosk-print-button"
                   >
-                    <Printer className="h-7 w-7" />
+                    <Printer className="h-6 w-6" />
                     Imprimir
                   </Button>
 
-                  <div className="text-xs text-foreground/50" data-testid="kiosk-session-sessionid">
+                  <div
+                    className="text-xs text-foreground/40"
+                    data-testid="kiosk-session-sessionid"
+                  >
                     {sessionId}
                   </div>
                 </div>

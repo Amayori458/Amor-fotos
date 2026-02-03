@@ -202,7 +202,7 @@ export default function MobileUpload() {
           <Button
             onClick={onUpload}
             disabled={busy || selected.length === 0}
-            className="h-auto w-full rounded-xl bg-secondary px-6 py-4 text-base font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
+            className="h-auto w-full rounded-xl bg-secondary px-6 py-3 text-base font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
             data-testid="mobile-upload-submit-button"
           >
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <CloudUpload className="h-5 w-5" />}
