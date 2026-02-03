@@ -7,6 +7,7 @@ import KioskSession from "@/pages/KioskSession";
 import MobileUpload from "@/pages/MobileUpload";
 import Admin from "@/pages/Admin";
 import PrintOrder from "@/pages/PrintOrder";
+import PrintPhotos from "@/pages/PrintPhotos";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/upload/:sessionId" element={<MobileUpload />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/print/:orderNumber" element={<PrintOrder />} />
+          <Route path="/print/:orderNumber/photos" element={<PrintPhotos />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

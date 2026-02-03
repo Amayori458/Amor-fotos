@@ -37,13 +37,20 @@ def _now_iso() -> str:
 
 
 def _safe_filename(name: str) -> str:
-    # avoid path traversal
     return Path(name).name
 
 
 async def _ensure_global_settings() -> dict:
     existing = await db.settings.find_one({"key": "global"}, {"_id": 0})
     if existing:
+        # ensure admin pin exists for older docs
+        if "admin_pin" not in existing:
+            await db.settings.update_one(
+                {"key": "global"},
+                {"$set": {"admin_pin": "1234", "updated_at": _now_iso()}},
+                upsert=True,
+            )
+            existing["admin_pin"] = "1234"
         return existing
 
     default = {
@@ -52,6 +59,7 @@ async def _ensure_global_settings() -> dict:
         "currency": "BRL",
         "price_per_photo": 2.50,
         "receipt_footer": "Leve este comprovante ao caixa para pagamento.",
+        "admin_pin": "1234",
         "updated_at": _now_iso(),
     }
     await db.settings.insert_one(default)
@@ -73,6 +81,11 @@ class SettingsUpdateIn(BaseModel):
     currency: Optional[str] = None
     price_per_photo: Optional[float] = None
     receipt_footer: Optional[str] = None
+    admin_pin: Optional[str] = None
+
+
+class AdminVerifyIn(BaseModel):
+    pin: str = Field(min_length=1)
 
 
 class SessionCreateOut(BaseModel):
@@ -141,7 +154,9 @@ async def root():
 @api_router.get("/settings", response_model=SettingsOut)
 async def get_settings():
     settings = await _ensure_global_settings()
-    return SettingsOut(**settings)
+    # do not expose admin_pin
+    safe = {k: v for k, v in settings.items() if k != "admin_pin"}
+    return SettingsOut(**safe)
 
 
 @api_router.put("/settings", response_model=SettingsOut)
@@ -149,14 +164,23 @@ async def update_settings(payload: SettingsUpdateIn):
     current = await _ensure_global_settings()
     update = {k: v for k, v in payload.model_dump().items() if v is not None}
     if not update:
-        return SettingsOut(**current)
+        safe = {k: v for k, v in current.items() if k != "admin_pin"}
+        return SettingsOut(**safe)
 
     update["updated_at"] = _now_iso()
 
     await db.settings.update_one({"key": "global"}, {"$set": update}, upsert=True)
     merged = {**current, **update}
     merged.pop("_id", None)
-    return SettingsOut(**merged)
+    safe = {k: v for k, v in merged.items() if k != "admin_pin"}
+    return SettingsOut(**safe)
+
+
+@api_router.post("/admin/verify-pin")
+async def admin_verify_pin(payload: AdminVerifyIn):
+    settings = await _ensure_global_settings()
+    ok = payload.pin == settings.get("admin_pin", "1234")
+    return {"ok": ok}
 
 
 @api_router.post("/sessions", response_model=SessionCreateOut)
@@ -184,7 +208,6 @@ async def _get_session_doc(session_id: str) -> dict:
     doc = await db.sessions.find_one({"session_id": session_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Sessão não encontrada")
-    # expiry check
     try:
         if datetime.fromisoformat(doc["expires_at"]) < datetime.now(timezone.utc):
             raise HTTPException(status_code=410, detail="Sessão expirada")
@@ -233,7 +256,6 @@ async def upload_photos(session_id: str, files: List[UploadFile] = File(...)):
 
         suffix = Path(original_name).suffix.lower()
         if not suffix:
-            # fallback by content-type
             import mimetypes
 
             guessed = mimetypes.guess_extension(content_type) or ""
@@ -279,7 +301,6 @@ async def get_upload(file_key: str):
     if not path.exists():
         raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 
-    # best-effort media type
     media_type = None
     try:
         import mimetypes
@@ -292,7 +313,6 @@ async def get_upload(file_key: str):
 
 
 def _order_number() -> str:
-    # short and human-readable
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     return f"APF-{stamp}-{uuid.uuid4().hex[:6].upper()}"
 
@@ -345,7 +365,6 @@ async def get_order(order_number: str):
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
 
     photos = await db.photos.find({"photo_id": {"$in": doc.get("photo_ids", [])}}, {"_id": 0}).to_list(5000)
-    # keep stable order
     by_id = {p["photo_id"]: p for p in photos}
     ordered = [by_id[pid] for pid in doc.get("photo_ids", []) if pid in by_id]
     photos_out = [PhotoOut(**p) for p in ordered]

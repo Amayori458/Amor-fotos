@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, CloudUpload, Loader2 } from "lucide-react";
+import { CloudUpload, Loader2, Plus, CheckCircle2 } from "lucide-react";
 import heic2any from "heic2any";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ async function convertIfNeeded(file) {
 export default function MobileUpload() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+
   const [selected, setSelected] = useState([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -58,11 +59,10 @@ export default function MobileUpload() {
         converted.push(await convertIfNeeded(f));
       }
       if (converted.length === 0) {
-        toast.message("Selecione arquivos de imagem (JPG, PNG, HEIC…).");
+        toast.message("Selecione imagens.");
         return;
       }
       setSelected((prev) => prev.concat(converted));
-      toast.success(converted.length + " foto(s) adicionada(s).");
     } finally {
       setBusy(false);
       e.target.value = "";
@@ -70,10 +70,7 @@ export default function MobileUpload() {
   };
 
   const onUpload = async () => {
-    if (selected.length === 0) {
-      toast.message("Selecione uma ou mais fotos.");
-      return;
-    }
+    if (selected.length === 0) return;
 
     setBusy(true);
     setProgress(0);
@@ -92,9 +89,9 @@ export default function MobileUpload() {
 
       setUploadedCount((c) => c + (data?.length || 0));
       setSelected([]);
-      toast.success("Upload concluído! Você pode enviar mais fotos.");
+      toast.success("Enviado.");
     } catch (e) {
-      toast.error("Falha no upload. Tente novamente.");
+      toast.error("Falha no upload.");
     } finally {
       setBusy(false);
       setProgress(0);
@@ -102,15 +99,10 @@ export default function MobileUpload() {
   };
 
   return (
-    <div className="min-h-screen bg-background px-5 py-8" data-testid="mobile-upload-page">
-      <div className="mx-auto w-full max-w-md">
+    <div className="min-h-screen bg-background" data-testid="mobile-upload-page">
+      <div className="mx-auto w-full max-w-md px-5 pb-28 pt-6" data-testid="mobile-upload-shell">
         <header className="flex items-center justify-between" data-testid="mobile-upload-header">
-          <img
-            src={LOGO_URL}
-            alt="Amor por Fotos"
-            className="h-10 w-auto"
-            data-testid="mobile-upload-logo"
-          />
+          <img src={LOGO_URL} alt="Amor por Fotos" className="h-10 w-auto" data-testid="mobile-upload-logo" />
           <Button
             variant="ghost"
             className="rounded-xl"
@@ -124,18 +116,16 @@ export default function MobileUpload() {
         <motion.div
           initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.35 }}
+          transition={{ duration: 0.3 }}
           className="mt-6"
+          data-testid="mobile-upload-hero"
         >
-          <div className="text-xs font-medium uppercase tracking-wide text-foreground/60" data-testid="mobile-upload-kicker">
-            Upload da sessão
+          <div className="text-xs font-medium uppercase tracking-wide text-foreground/60" data-testid="mobile-upload-step">
+            Etapa 2 · Upload
           </div>
-          <h1 className="mt-2 text-4xl font-extrabold tracking-tight" data-testid="mobile-upload-title">
-            Envie suas fotos
-          </h1>
-          <p className="mt-2 text-sm text-foreground/70" data-testid="mobile-upload-subtitle">
-            Selecione imagens do seu celular. Pode enviar quantas quiser.
-          </p>
+          <div className="mt-2 text-3xl font-extrabold tracking-tight" data-testid="mobile-upload-title">
+            Selecione e envie
+          </div>
         </motion.div>
 
         <Card className="mt-6 rounded-2xl border border-black/5 bg-white shadow-sm" data-testid="mobile-upload-card">
@@ -154,52 +144,37 @@ export default function MobileUpload() {
                 data-testid="mobile-upload-file-input"
               />
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground">
-                <CloudUpload className="h-6 w-6" />
+                <Plus className="h-6 w-6" />
               </div>
               <div className="mt-4 text-base font-bold" data-testid="mobile-upload-cta">
-                Toque para selecionar
-              </div>
-              <div className="mt-2 text-xs text-foreground/60" data-testid="mobile-upload-hint">
-                Aceita JPG, PNG e HEIC (convertido automaticamente).
+                Adicionar fotos
               </div>
             </label>
 
             {busy && progress > 0 ? (
               <div className="mt-4" data-testid="mobile-upload-progress-wrapper">
                 <div className="mb-2 flex items-center justify-between text-xs font-semibold">
-                  <span>Enviando…</span>
+                  <span>Enviando</span>
                   <span data-testid="mobile-upload-progress-text">{progress}%</span>
                 </div>
                 <Progress value={progress} data-testid="mobile-upload-progress" />
               </div>
             ) : null}
 
-            <div className="mt-5 flex gap-3">
-              <Button
-                onClick={onUpload}
-                disabled={busy || selected.length === 0}
-                className="h-auto flex-1 rounded-xl bg-secondary px-6 py-4 text-base font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
-                data-testid="mobile-upload-submit-button"
-              >
-                {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                Enviar ({selected.length})
-              </Button>
-            </div>
-
-            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-foreground/70" data-testid="mobile-upload-uploaded-count">
-              <CheckCircle2 className="h-4 w-4 text-accent" />
-              Enviadas nesta sessão: <span className="font-extrabold">{uploadedCount}</span>
+            <div className="mt-5 flex items-center justify-between text-xs text-foreground/60" data-testid="mobile-upload-stats">
+              <div data-testid="mobile-upload-selected-count">{selected.length} selecionada(s)</div>
+              <div className="flex items-center gap-2" data-testid="mobile-upload-uploaded-count">
+                <CheckCircle2 className="h-4 w-4 text-accent" />
+                {uploadedCount} enviada(s)
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {previews.length > 0 ? (
           <div className="mt-6" data-testid="mobile-upload-previews-section">
-            <div className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground/60">
-              Prévia ({previews.length})
-            </div>
             <div className="grid grid-cols-3 gap-3" data-testid="mobile-upload-previews-grid">
-              {previews.slice(0, 24).map((p) => {
+              {previews.slice(0, 18).map((p) => {
                 const key = p.key;
                 const url = p.url;
                 const name = p.name;
@@ -216,9 +191,23 @@ export default function MobileUpload() {
             </div>
           </div>
         ) : null}
+      </div>
 
-        <div className="mt-8 text-center text-xs text-foreground/40" data-testid="mobile-upload-footer">
-          Ao finalizar, volte para o totem para imprimir.
+      <div
+        className="fixed inset-x-0 bottom-0 border-t border-black/5 bg-white/95 px-5 py-4"
+        style={{ backdropFilter: "blur(10px)" }}
+        data-testid="mobile-upload-bottom-bar"
+      >
+        <div className="mx-auto w-full max-w-md">
+          <Button
+            onClick={onUpload}
+            disabled={busy || selected.length === 0}
+            className="h-auto w-full rounded-xl bg-secondary px-6 py-4 text-base font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
+            data-testid="mobile-upload-submit-button"
+          >
+            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <CloudUpload className="h-5 w-5" />}
+            Enviar
+          </Button>
         </div>
       </div>
     </div>
