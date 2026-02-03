@@ -9,6 +9,9 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/sonner";
 import { absoluteFromPath, api } from "@/lib/api";
 
+const LOGO_URL =
+  "https://customer-assets.emergentagent.com/job_photo-kiosk-5/artifacts/em2ts921_1753098819.amorporfotos.com.br-removebg-preview.png";
+
 export default function PrintOrder() {
   const { orderNumber } = useParams();
   const navigate = useNavigate();
@@ -63,7 +66,7 @@ export default function PrintOrder() {
       } catch (e) {
         // ignore
       }
-    }, 600);
+    }, 500);
 
     const after = async () => {
       await onMarkPrinted();
@@ -80,7 +83,7 @@ export default function PrintOrder() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-10" data-testid="print-loading-page">
-        <div className="mx-auto max-w-3xl text-base text-foreground/60" data-testid="print-loading-text">
+        <div className="mx-auto max-w-3xl text-sm text-foreground/60" data-testid="print-loading-text">
           Carregando pedido...
         </div>
       </div>
@@ -91,11 +94,11 @@ export default function PrintOrder() {
     return (
       <div className="min-h-screen bg-background p-10" data-testid="print-not-found-page">
         <div className="mx-auto max-w-3xl">
-          <div className="text-2xl font-extrabold" data-testid="print-not-found-title">
+          <div className="text-xl font-bold" data-testid="print-not-found-title">
             Pedido não encontrado
           </div>
           <Button
-            className="mt-6 rounded-full"
+            className="mt-6 rounded-xl"
             onClick={() => navigate("/")}
             data-testid="print-not-found-back-button"
           >
@@ -114,7 +117,7 @@ export default function PrintOrder() {
         <div className="no-print flex items-center justify-between" data-testid="print-topbar">
           <Button
             variant="ghost"
-            className="rounded-2xl px-4 py-3"
+            className="rounded-xl px-4 py-3"
             onClick={() => navigate("/")}
             data-testid="print-back-home-button"
           >
@@ -125,16 +128,16 @@ export default function PrintOrder() {
           <div className="flex gap-3">
             <Button
               onClick={() => window.print()}
-              className="rounded-full bg-secondary px-6 py-4 text-base font-extrabold text-secondary-foreground shadow transition-colors hover:bg-secondary/90"
+              className="rounded-xl bg-secondary px-5 py-3 text-sm font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90"
               data-testid="print-now-button"
             >
               <Printer className="h-5 w-5" />
-              Imprimir agora
+              Imprimir
             </Button>
             <Button
               onClick={onMarkPrinted}
               disabled={marking}
-              className="rounded-full bg-primary px-6 py-4 text-base font-extrabold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-60"
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-60"
               data-testid="print-mark-printed-button"
             >
               <CheckCircle2 className="h-5 w-5" />
@@ -144,64 +147,65 @@ export default function PrintOrder() {
         </div>
 
         <motion.div
-          initial={{ y: 12, opacity: 0 }}
+          initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: 0.35 }}
           className="mt-6"
         >
-          <div className="text-sm font-semibold uppercase tracking-wide text-foreground/60" data-testid="print-kicker">
-            Comprovante
+          <div className="flex items-center gap-3" data-testid="receipt-header">
+            <img src={LOGO_URL} alt="Amor por Fotos" className="h-9 w-auto" data-testid="receipt-logo" />
+            <div>
+              <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">Comprovante</div>
+              <div className="text-xl font-bold" data-testid="print-title">{order.store_name}</div>
+            </div>
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight" data-testid="print-title">
-            {order.store_name}
-          </h1>
-          <p className="mt-2 text-base text-foreground/70" data-testid="print-subtitle">
+          <p className="mt-3 text-sm text-foreground/70" data-testid="print-subtitle">
             Entregue este comprovante ao cliente para pagamento no caixa.
           </p>
         </motion.div>
 
-        <Card className="mt-6 rounded-[28px] border-black/5 bg-white shadow-xl" data-testid="receipt-card">
-          <CardContent className="p-8">
+        <Card className="mt-6 rounded-2xl border border-black/5 bg-white shadow-sm" data-testid="receipt-card">
+          <CardContent className="p-7">
             <div className="flex items-start justify-between gap-6">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Pedido</div>
-                <div className="mt-1 text-2xl font-extrabold text-secondary" data-testid="receipt-order-number">
+                <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">Pedido</div>
+                <div className="mt-1 text-xl font-extrabold text-secondary" data-testid="receipt-order-number">
                   {order.order_number}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Total</div>
-                <div className="mt-1 text-2xl font-extrabold" data-testid="receipt-total">
+                <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">Total</div>
+                <div className="mt-1 text-xl font-extrabold" data-testid="receipt-total">
                   {totalText}
                 </div>
               </div>
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-5" />
 
-            <div className="grid grid-cols-2 gap-4 text-sm" data-testid="receipt-details">
+            <div className="grid grid-cols-2 gap-4 text-xs" data-testid="receipt-details">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Fotos</div>
-                <div className="mt-1 text-lg font-bold" data-testid="receipt-photo-count">
+                <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">Fotos</div>
+                <div className="mt-1 text-base font-bold" data-testid="receipt-photo-count">
                   {order.photo_count}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-foreground/60">Preço / foto</div>
-                <div className="mt-1 text-lg font-bold" data-testid="receipt-price-per-photo">
+                <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">Preço / foto</div>
+                <div className="mt-1 text-base font-bold" data-testid="receipt-price-per-photo">
                   {Number(order.price_per_photo).toFixed(2)}
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl bg-background/60 p-5 text-sm text-foreground/70" data-testid="receipt-footer">
+            <div className="mt-5 rounded-xl bg-muted/60 p-4 text-xs text-foreground/70" data-testid="receipt-footer">
               {order.receipt_footer || "Leve este comprovante ao caixa para pagamento."}
             </div>
           </CardContent>
         </Card>
 
         <div className="mt-10" data-testid="print-photos-section">
-          <div className="text-sm font-semibold uppercase tracking-wide text-foreground/60" data-testid="print-photos-title">
+          <div className="text-xs font-medium uppercase tracking-wide text-foreground/60" data-testid="print-photos-title">
             Fotos para impressão
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4" data-testid="print-photos-grid">
@@ -212,7 +216,7 @@ export default function PrintOrder() {
               return (
                 <div
                   key={photoId}
-                  className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
+                  className="overflow-hidden rounded-xl border border-black/5 bg-white"
                   style={{ breakInside: "avoid" }}
                   data-testid={"print-photo-" + photoId}
                 >
@@ -231,10 +235,10 @@ export default function PrintOrder() {
               );
             })}
           </div>
+        </div>
 
-          <div className="no-print mt-6 text-xs text-foreground/50" data-testid="print-hint">
-            Para imprimir somente o comprovante, use a opção de “seleção” no diálogo de impressão.
-          </div>
+        <div className="no-print mt-8 text-center text-xs text-foreground/40" data-testid="print-hint">
+          Se quiser, no diálogo de impressão você pode escolher o que imprimir (comprovante/fotos).
         </div>
       </div>
     </div>

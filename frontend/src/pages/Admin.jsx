@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
 import { api } from "@/lib/api";
 
+const LOGO_URL =
+  "https://customer-assets.emergentagent.com/job_photo-kiosk-5/artifacts/em2ts921_1753098819.amorporfotos.com.br-removebg-preview.png";
+
 export default function Admin() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -75,45 +78,52 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-background px-6 py-10" data-testid="admin-page">
       <div className="mx-auto max-w-2xl">
-        <div className="flex items-center justify-between" data-testid="admin-header">
-          <Button
-            variant="ghost"
-            className="rounded-2xl px-4 py-3"
-            onClick={() => navigate("/")}
-            data-testid="admin-back-button"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            Voltar
-          </Button>
+        <header className="flex items-center justify-between" data-testid="admin-header">
+          <div className="flex items-center gap-3" data-testid="admin-brand">
+            <img src={LOGO_URL} alt="Amor por Fotos" className="h-10 w-auto" data-testid="admin-logo" />
+            <div>
+              <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">Configuração</div>
+              <div className="text-lg font-bold" data-testid="admin-title">Ajustes do Totem</div>
+            </div>
+          </div>
 
-          <Button
-            onClick={onSave}
-            disabled={saving || loading}
-            className="rounded-full bg-primary px-6 py-4 text-base font-extrabold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-60"
-            data-testid="admin-save-button"
-          >
-            <Save className="h-5 w-5" />
-            Salvar
-          </Button>
-        </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              className="rounded-xl px-4 py-3"
+              onClick={() => navigate("/")}
+              data-testid="admin-back-button"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              Voltar
+            </Button>
+
+            <Button
+              onClick={onSave}
+              disabled={saving || loading}
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-60"
+              data-testid="admin-save-button"
+            >
+              <Save className="h-5 w-5" />
+              Salvar
+            </Button>
+          </div>
+        </header>
 
         <motion.div
-          initial={{ y: 12, opacity: 0 }}
+          initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45 }}
-          className="mt-6"
+          transition={{ duration: 0.35 }}
+          className="mt-8"
         >
-          <h1 className="text-4xl font-extrabold tracking-tight" data-testid="admin-title">
-            Ajustes do Totem
-          </h1>
-          <p className="mt-2 text-base text-foreground/70" data-testid="admin-subtitle">
-            Defina nome da loja e preço por foto (para o comprovante).
+          <p className="text-sm text-foreground/70" data-testid="admin-subtitle">
+            Defina nome da loja e preço por foto (usado no comprovante).
           </p>
         </motion.div>
 
-        <Card className="mt-6 rounded-[28px] border-black/5 bg-white/80 shadow-xl" data-testid="admin-settings-card">
+        <Card className="mt-6 rounded-2xl border border-black/5 bg-white shadow-sm" data-testid="admin-settings-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl" data-testid="admin-settings-card-title">
+            <CardTitle className="flex items-center gap-2 text-base" data-testid="admin-settings-card-title">
               <BadgeDollarSign className="h-5 w-5 text-primary" />
               Configurações
             </CardTitle>
@@ -127,7 +137,7 @@ export default function Admin() {
                 id="storeName"
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
-                className="h-12 rounded-2xl"
+                className="h-11 rounded-xl"
                 placeholder="Amor por Fotos"
                 data-testid="admin-store-name-input"
               />
@@ -142,11 +152,11 @@ export default function Admin() {
                   id="currency"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-                  className="h-12 rounded-2xl"
+                  className="h-11 rounded-xl"
                   placeholder="BRL"
                   data-testid="admin-currency-input"
                 />
-                <div className="text-xs text-foreground/60" data-testid="admin-currency-hint">
+                <div className="text-xs text-foreground/50" data-testid="admin-currency-hint">
                   Ex: BRL, USD, EUR
                 </div>
               </div>
@@ -160,11 +170,11 @@ export default function Admin() {
                   inputMode="decimal"
                   value={pricePerPhoto}
                   onChange={(e) => setPricePerPhoto(e.target.value)}
-                  className="h-12 rounded-2xl"
+                  className="h-11 rounded-xl"
                   placeholder="2.50"
                   data-testid="admin-price-input"
                 />
-                <div className="text-xs text-foreground/60" data-testid="admin-price-hint">
+                <div className="text-xs text-foreground/50" data-testid="admin-price-hint">
                   No comprovante: {currencyLabel} {Number(pricePerPhoto || 0).toFixed(2)}
                 </div>
               </div>
@@ -178,20 +188,20 @@ export default function Admin() {
                 id="receiptFooter"
                 value={receiptFooter}
                 onChange={(e) => setReceiptFooter(e.target.value)}
-                className="min-h-[110px] rounded-2xl"
+                className="min-h-[110px] rounded-xl"
                 placeholder="Leve este comprovante ao caixa para pagamento."
                 data-testid="admin-receipt-footer-textarea"
               />
             </div>
 
-            <div className="rounded-3xl border border-black/5 bg-background/60 p-5 text-sm text-foreground/70" data-testid="admin-note">
-              Dica: para teste com impressora comum, o sistema abre o diálogo do navegador.
+            <div className="rounded-xl bg-muted/60 p-4 text-xs text-foreground/60" data-testid="admin-note">
+              Impressão em teste com impressora comum: o navegador abrirá o diálogo de impressão.
             </div>
           </CardContent>
         </Card>
 
         {loading ? (
-          <div className="mt-4 text-sm text-foreground/60" data-testid="admin-loading-text">
+          <div className="mt-4 text-xs text-foreground/50" data-testid="admin-loading-text">
             Carregando...
           </div>
         ) : null}

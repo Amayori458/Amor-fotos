@@ -1,8 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import { Camera, CheckCircle2, Clock3, Images, Printer, RotateCcw } from "lucide-react";
+import {
+  Camera,
+  CheckCircle2,
+  Clock3,
+  Images,
+  Printer,
+  RotateCcw,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,10 +17,12 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/sonner";
 import { absoluteFromPath, api } from "@/lib/api";
 
+const LOGO_URL =
+  "https://customer-assets.emergentagent.com/job_photo-kiosk-5/artifacts/em2ts921_1753098819.amorporfotos.com.br-removebg-preview.png";
+
 export default function KioskSession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -22,7 +31,7 @@ export default function KioskSession() {
 
   const uploadUrl = useMemo(() => {
     const origin = window.location.origin;
-    return `${origin}/upload/${sessionId}`;
+    return origin + "/upload/" + sessionId;
   }, [sessionId]);
 
   const kioskAutoReturnSec = 5 * 60;
@@ -30,7 +39,7 @@ export default function KioskSession() {
 
   const fetchSession = async () => {
     try {
-      const { data } = await api.get(`/sessions/${sessionId}`);
+      const { data } = await api.get("/sessions/" + sessionId);
       setSession(data);
     } catch (e) {
       toast.error("Sessão inválida ou expirada.");
@@ -66,11 +75,11 @@ export default function KioskSession() {
     resetIdle();
     setCreatingOrder(true);
     try {
-      const { data } = await api.post(`/sessions/${sessionId}/orders`, {
+      const { data } = await api.post("/sessions/" + sessionId + "/orders", {
         selected_photo_ids: null,
       });
 
-      const url = `/print/${data.order_number}?autoprint=1&from=kiosk`;
+      const url = "/print/" + data.order_number + "?autoprint=1&from=kiosk";
       const win = window.open(url, "_blank", "noopener,noreferrer");
       if (!win) toast.message("Permita pop-ups para imprimir automaticamente.");
 
@@ -82,48 +91,46 @@ export default function KioskSession() {
     }
   };
 
-  const photos = session?.photos || [];
-
-  const priceText = useMemo(() => {
-    const p = searchParams.get("price");
-    return p;
-  }, [searchParams]);
+  const photos = (session && Array.isArray(session.photos) ? session.photos : []) || [];
 
   return (
     <div
-      className="kiosk-shell noise bg-background"
+      className="kiosk-container bg-background"
       onPointerDown={resetIdle}
       onKeyDown={resetIdle}
       tabIndex={-1}
       data-testid="kiosk-session-page"
     >
-      <div className="absolute inset-x-0 top-0 h-[18vh] bg-gradient-to-b from-secondary/15 to-transparent" />
-
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1080px] flex-col px-8 py-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
-              Sessão
-            </div>
-            <div
-              className="text-2xl font-extrabold tracking-tight"
-              data-testid="kiosk-session-id-text"
-            >
-              {sessionId}
+      <div className="mx-auto flex min-h-screen max-w-[1080px] flex-col px-10 py-10">
+        <header className="flex items-center justify-between" data-testid="kiosk-session-header">
+          <div className="flex items-center gap-4">
+            <img
+              src={LOGO_URL}
+              alt="Amor por Fotos"
+              className="h-10 w-auto"
+              data-testid="kiosk-session-logo"
+            />
+            <div>
+              <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">
+                Sessão
+              </div>
+              <div className="text-lg font-bold" data-testid="kiosk-session-id-text">
+                {sessionId}
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div
-              className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold shadow-sm"
+              className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground/70"
               data-testid="kiosk-idle-timer"
             >
-              <Clock3 className="h-4 w-4 text-foreground/70" />
+              <Clock3 className="h-4 w-4" />
               {idleCountdown}s
             </div>
             <Button
               variant="secondary"
-              className="h-auto rounded-full px-6 py-4 text-base font-bold"
+              className="h-auto rounded-full px-6 py-3 text-base font-bold"
               onClick={() => navigate("/")}
               data-testid="kiosk-back-home-button"
             >
@@ -131,44 +138,52 @@ export default function KioskSession() {
               Nova sessão
             </Button>
           </div>
-        </div>
+        </header>
 
         <motion.div
-          initial={{ y: 18, opacity: 0 }}
+          initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45 }}
-          className="mt-8"
+          transition={{ duration: 0.35 }}
+          className="mt-10"
         >
-          <h1 className="text-5xl font-extrabold tracking-tight" data-testid="kiosk-session-headline">
+          <h1
+            className="text-4xl font-extrabold tracking-tight"
+            data-testid="kiosk-session-headline"
+          >
             Escaneie e envie suas fotos
           </h1>
-          <p className="mt-3 text-lg text-foreground/70" data-testid="kiosk-session-subtitle">
-            Aponte a câmera do celular para o QR Code e selecione as imagens.
+          <p className="mt-3 text-base text-foreground/70" data-testid="kiosk-session-subtitle">
+            Use o celular para enviar. As miniaturas aparecem automaticamente.
           </p>
         </motion.div>
 
-        <div className="mt-8 grid grid-cols-1 gap-6">
-          <Card className="glass rounded-[28px] border-black/5 bg-white/75 shadow-xl">
+        <div className="mt-8 grid gap-6">
+          <Card
+            className="rounded-2xl border border-black/5 bg-white shadow-sm"
+            data-testid="kiosk-session-card"
+          >
             <CardContent className="p-8">
-              <div className="grid grid-cols-1 gap-8">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="space-y-3">
+              <div className="grid gap-8">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground shadow">
-                        <Camera className="h-6 w-6" />
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
+                        <Camera className="h-5 w-5" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
+                        <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">
                           Passo 1
                         </div>
-                        <div className="text-xl font-bold">Escaneie o QR Code</div>
+                        <div className="text-lg font-bold">Escaneie o QR Code</div>
                       </div>
                     </div>
-                    <div className="text-base text-foreground/70" data-testid="kiosk-step-1-text">
+
+                    <div className="text-sm text-foreground/60" data-testid="kiosk-step-1-text">
                       Abra a câmera do seu celular e aponte para o código.
                     </div>
+
                     <div
-                      className="rounded-2xl border border-black/5 bg-white p-4 text-sm text-foreground/70"
+                      className="rounded-xl border border-black/10 bg-background px-4 py-3 text-xs text-foreground/70"
                       data-testid="kiosk-upload-url"
                     >
                       {uploadUrl}
@@ -176,9 +191,12 @@ export default function KioskSession() {
                   </div>
 
                   <div className="flex items-center justify-center">
-                    <div className="rounded-3xl border-2 border-primary/30 bg-white p-6 shadow-sm">
-                      <QRCodeSVG value={uploadUrl} size={300} level="H" includeMargin />
-                      <div className="mt-4 text-center text-sm font-semibold text-foreground/70" data-testid="kiosk-qr-label">
+                    <div
+                      className="rounded-2xl border border-black/10 bg-white p-6"
+                      data-testid="kiosk-qr-wrapper"
+                    >
+                      <QRCodeSVG value={uploadUrl} size={280} level="H" includeMargin />
+                      <div className="mt-3 text-center text-xs font-semibold text-foreground/60" data-testid="kiosk-qr-label">
                         Escaneie para começar
                       </div>
                       <div className="sr-only" data-testid="kiosk-qr-code" />
@@ -188,79 +206,66 @@ export default function KioskSession() {
 
                 <Separator />
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-secondary text-secondary-foreground shadow">
-                        <Images className="h-6 w-6" />
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-secondary-foreground">
+                        <Images className="h-5 w-5" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
+                        <div className="text-xs font-medium uppercase tracking-wide text-foreground/60">
                           Passo 2
                         </div>
-                        <div className="text-xl font-bold">Envie suas fotos</div>
+                        <div className="text-lg font-bold">Envie suas fotos</div>
                       </div>
                     </div>
 
-                    <div
-                      className="text-base text-foreground/70"
-                      data-testid="kiosk-step-2-text"
-                    >
-                      Assim que o envio terminar, as miniaturas aparecem aqui.
+                    <div className="text-sm text-foreground/60" data-testid="kiosk-step-2-text">
+                      Assim que o envio terminar, a prévia aparece aqui.
                     </div>
 
                     <div
-                      className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary"
+                      className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold"
                       data-testid="kiosk-uploaded-count-badge"
                     >
-                      <CheckCircle2 className="h-4 w-4" />
+                      <CheckCircle2 className="h-4 w-4 text-accent" />
                       <span data-testid="uploaded-count-text">{photos.length}</span> foto(s) recebida(s)
                     </div>
-
-                    {priceText ? (
-                      <div className="text-sm text-foreground/60" data-testid="kiosk-price-hint">
-                        Preço configurado: {priceText}
-                      </div>
-                    ) : null}
                   </div>
 
                   <div>
                     <Button
                       onClick={onPrint}
                       disabled={creatingOrder || photos.length === 0}
-                      className="h-auto w-full rounded-full bg-secondary px-10 py-8 text-2xl font-extrabold tracking-wide text-secondary-foreground shadow-lg transition-colors hover:bg-secondary/90 disabled:opacity-60"
+                      className="h-auto w-full rounded-xl bg-secondary px-8 py-6 text-xl font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
                       data-testid="kiosk-print-button"
                     >
-                      <Printer className="h-7 w-7" />
+                      <Printer className="h-6 w-6" />
                       Imprimir + comprovante
                     </Button>
-
-                    <div className="mt-3 text-sm text-foreground/60" data-testid="kiosk-print-helper">
-                      Uma janela de impressão será aberta. Confirme para revelar.
+                    <div className="mt-3 text-xs text-foreground/50" data-testid="kiosk-print-helper">
+                      Será aberta uma janela de impressão do navegador.
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/60">
+                  <div className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground/60">
                     Prévia
                   </div>
                   {loading ? (
-                    <div className="text-base text-foreground/60" data-testid="kiosk-loading-text">
+                    <div className="text-sm text-foreground/60" data-testid="kiosk-loading-text">
                       Carregando...
                     </div>
                   ) : photos.length === 0 ? (
                     <div
-                      className="rounded-3xl border border-dashed border-black/10 bg-white/70 p-8 text-base text-foreground/60"
+                      className="rounded-2xl border border-dashed border-black/15 bg-background p-6 text-sm text-foreground/60"
                       data-testid="kiosk-empty-photos"
                     >
                       Aguardando upload do celular…
                     </div>
                   ) : (
-                    <div
-                      className="grid grid-cols-3 gap-3 md:grid-cols-4"
-                      data-testid="kiosk-photos-grid"
-                    >
+                    <div className="grid grid-cols-4 gap-3" data-testid="kiosk-photos-grid">
                       {photos.slice(-12).map((p) => {
                         const photoId = p.photo_id;
                         const urlPath = p.url_path;
@@ -268,13 +273,13 @@ export default function KioskSession() {
                         return (
                           <div
                             key={photoId}
-                            className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
+                            className="overflow-hidden rounded-xl border border-black/5 bg-white"
                             data-testid={"kiosk-photo-thumb-" + photoId}
                           >
                             <img
                               src={absoluteFromPath(urlPath)}
                               alt={fileName}
-                              className="h-36 w-full object-cover"
+                              className="h-28 w-full object-cover"
                             />
                           </div>
                         );
@@ -287,10 +292,10 @@ export default function KioskSession() {
           </Card>
 
           <div
-            className="rounded-3xl border border-black/5 bg-white/70 p-6 text-sm text-foreground/60"
+            className="rounded-2xl border border-black/5 bg-muted/50 p-5 text-xs text-foreground/60"
             data-testid="kiosk-security-note"
           >
-            Dica: mantenha esta tela aberta durante o envio. A sessão volta para o início automaticamente.
+            Mantenha esta tela aberta durante o envio. A sessão volta ao início automaticamente.
           </div>
         </div>
       </div>

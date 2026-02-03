@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, CloudUpload, Images, Loader2 } from "lucide-react";
+import { CheckCircle2, CloudUpload, Loader2 } from "lucide-react";
 import heic2any from "heic2any";
 
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,11 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/sonner";
 import { api } from "@/lib/api";
 
+const LOGO_URL =
+  "https://customer-assets.emergentagent.com/job_photo-kiosk-5/artifacts/em2ts921_1753098819.amorporfotos.com.br-removebg-preview.png";
+
 const isHeic = (file) => {
-  const name = (file?.name || "").toLowerCase();
+  const name = (file && file.name ? file.name : "").toLowerCase();
   return name.endsWith(".heic") || name.endsWith(".heif") || file?.type === "image/heic";
 };
 
@@ -29,6 +32,7 @@ async function convertIfNeeded(file) {
 
 export default function MobileUpload() {
   const { sessionId } = useParams();
+  const navigate = useNavigate();
   const [selected, setSelected] = useState([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -36,7 +40,7 @@ export default function MobileUpload() {
 
   const previews = useMemo(() => {
     return selected.map((f) => ({
-      key: `${f.name}-${f.size}-${f.lastModified}`,
+      key: f.name + "-" + f.size + "-" + f.lastModified,
       url: URL.createObjectURL(f),
       name: f.name,
     }));
@@ -50,8 +54,6 @@ export default function MobileUpload() {
     try {
       const converted = [];
       for (const f of files) {
-        // accept maximum possible: try convert HEIC, keep others
-        // skip clearly non-images (still allow if browser reports image/*)
         if (!f.type?.startsWith("image/") && !isHeic(f)) continue;
         converted.push(await convertIfNeeded(f));
       }
@@ -59,8 +61,8 @@ export default function MobileUpload() {
         toast.message("Selecione arquivos de imagem (JPG, PNG, HEIC…).");
         return;
       }
-      setSelected((prev) => [...prev, ...converted]);
-      toast.success(`${converted.length} foto(s) adicionada(s).`);
+      setSelected((prev) => prev.concat(converted));
+      toast.success(converted.length + " foto(s) adicionada(s).");
     } finally {
       setBusy(false);
       e.target.value = "";
@@ -80,7 +82,7 @@ export default function MobileUpload() {
       const form = new FormData();
       for (const f of selected) form.append("files", f, f.name);
 
-      const { data } = await api.post(`/sessions/${sessionId}/photos`, form, {
+      const { data } = await api.post("/sessions/" + sessionId + "/photos", form, {
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (evt) => {
           if (!evt.total) return;
@@ -102,27 +104,44 @@ export default function MobileUpload() {
   return (
     <div className="min-h-screen bg-background px-5 py-8" data-testid="mobile-upload-page">
       <div className="mx-auto w-full max-w-md">
+        <header className="flex items-center justify-between" data-testid="mobile-upload-header">
+          <img
+            src={LOGO_URL}
+            alt="Amor por Fotos"
+            className="h-10 w-auto"
+            data-testid="mobile-upload-logo"
+          />
+          <Button
+            variant="ghost"
+            className="rounded-xl"
+            onClick={() => navigate("/")}
+            data-testid="mobile-upload-back-home"
+          >
+            Totem
+          </Button>
+        </header>
+
         <motion.div
-          initial={{ y: 14, opacity: 0 }}
+          initial={{ y: 8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: 0.35 }}
+          className="mt-6"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary">
-            <Images className="h-4 w-4" />
+          <div className="text-xs font-medium uppercase tracking-wide text-foreground/60" data-testid="mobile-upload-kicker">
             Upload da sessão
           </div>
-          <h1 className="mt-4 text-4xl font-extrabold tracking-tight" data-testid="mobile-upload-title">
+          <h1 className="mt-2 text-4xl font-extrabold tracking-tight" data-testid="mobile-upload-title">
             Envie suas fotos
           </h1>
-          <p className="mt-2 text-base text-foreground/70" data-testid="mobile-upload-subtitle">
-            Selecione imagens do seu celular. Pode adicionar mais fotos depois.
+          <p className="mt-2 text-sm text-foreground/70" data-testid="mobile-upload-subtitle">
+            Selecione imagens do seu celular. Pode enviar quantas quiser.
           </p>
         </motion.div>
 
-        <Card className="mt-6 rounded-[28px] border-black/5 bg-white/80 shadow-xl">
+        <Card className="mt-6 rounded-2xl border border-black/5 bg-white shadow-sm" data-testid="mobile-upload-card">
           <CardContent className="p-6">
             <label
-              className="block cursor-pointer rounded-3xl border-2 border-dashed border-primary/25 bg-white px-5 py-10 text-center"
+              className="block cursor-pointer rounded-2xl border border-dashed border-black/15 bg-background px-5 py-10 text-center"
               data-testid="mobile-upload-dropzone"
             >
               <input
@@ -134,20 +153,20 @@ export default function MobileUpload() {
                 disabled={busy}
                 data-testid="mobile-upload-file-input"
               />
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow">
-                <CloudUpload className="h-7 w-7" />
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground">
+                <CloudUpload className="h-6 w-6" />
               </div>
-              <div className="mt-4 text-lg font-bold" data-testid="mobile-upload-cta">
+              <div className="mt-4 text-base font-bold" data-testid="mobile-upload-cta">
                 Toque para selecionar
               </div>
-              <div className="mt-2 text-sm text-foreground/60" data-testid="mobile-upload-hint">
+              <div className="mt-2 text-xs text-foreground/60" data-testid="mobile-upload-hint">
                 Aceita JPG, PNG e HEIC (convertido automaticamente).
               </div>
             </label>
 
             {busy && progress > 0 ? (
               <div className="mt-4" data-testid="mobile-upload-progress-wrapper">
-                <div className="mb-2 flex items-center justify-between text-sm font-semibold">
+                <div className="mb-2 flex items-center justify-between text-xs font-semibold">
                   <span>Enviando…</span>
                   <span data-testid="mobile-upload-progress-text">{progress}%</span>
                 </div>
@@ -159,7 +178,7 @@ export default function MobileUpload() {
               <Button
                 onClick={onUpload}
                 disabled={busy || selected.length === 0}
-                className="h-auto flex-1 rounded-full bg-secondary px-6 py-4 text-lg font-extrabold text-secondary-foreground shadow-md transition-colors hover:bg-secondary/90 disabled:opacity-60"
+                className="h-auto flex-1 rounded-xl bg-secondary px-6 py-4 text-base font-bold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/90 disabled:opacity-60"
                 data-testid="mobile-upload-submit-button"
               >
                 {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
@@ -167,8 +186,8 @@ export default function MobileUpload() {
               </Button>
             </div>
 
-            <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-foreground/70" data-testid="mobile-upload-uploaded-count">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
+            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-foreground/70" data-testid="mobile-upload-uploaded-count">
+              <CheckCircle2 className="h-4 w-4 text-accent" />
               Enviadas nesta sessão: <span className="font-extrabold">{uploadedCount}</span>
             </div>
           </CardContent>
@@ -176,7 +195,7 @@ export default function MobileUpload() {
 
         {previews.length > 0 ? (
           <div className="mt-6" data-testid="mobile-upload-previews-section">
-            <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/60">
+            <div className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground/60">
               Prévia ({previews.length})
             </div>
             <div className="grid grid-cols-3 gap-3" data-testid="mobile-upload-previews-grid">
@@ -187,7 +206,7 @@ export default function MobileUpload() {
                 return (
                   <div
                     key={key}
-                    className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
+                    className="overflow-hidden rounded-xl border border-black/5 bg-white"
                     data-testid={"mobile-upload-preview-" + key}
                   >
                     <img src={url} alt={name} className="h-24 w-full object-cover" />
@@ -195,15 +214,10 @@ export default function MobileUpload() {
                 );
               })}
             </div>
-            {previews.length > 24 ? (
-              <div className="mt-3 text-sm text-foreground/60" data-testid="mobile-upload-previews-more">
-                Mostrando 24 de {previews.length}.
-              </div>
-            ) : null}
           </div>
         ) : null}
 
-        <div className="mt-8 text-center text-xs text-foreground/50" data-testid="mobile-upload-footer">
+        <div className="mt-8 text-center text-xs text-foreground/40" data-testid="mobile-upload-footer">
           Ao finalizar, volte para o totem para imprimir.
         </div>
       </div>
