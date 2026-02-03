@@ -35,7 +35,7 @@ export default function Admin() {
     setLoading(true);
     try {
       const { data } = await api.get("/settings");
-      setStoreName(data.store_name || "Amor por Fotos");
+      setStoreName(String(data.store_name || "Amor por Fotos"));
       setCurrency(data.currency || "BRL");
       setPricePerPhoto(String(data.price_per_photo ?? 2.5));
       setReceiptFooter(data.receipt_footer || "");
