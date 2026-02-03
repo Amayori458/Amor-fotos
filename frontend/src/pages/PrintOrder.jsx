@@ -106,6 +106,8 @@ export default function PrintOrder() {
     );
   }
 
+  const photos = Array.isArray(order.photos) ? order.photos : [];
+
   return (
     <div className="min-h-screen bg-background px-6 py-8" data-testid="print-page">
       <div className="mx-auto max-w-3xl">
